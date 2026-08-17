@@ -167,8 +167,7 @@ const PAGE_HEAD = (title, lang, pageKey) => `<!doctype html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="${assetHref(lang, pageKey, 'style.css')}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" media="(prefers-color-scheme: dark)">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" media="(prefers-color-scheme: light)">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
@@ -178,24 +177,21 @@ const PAGE_HEAD = (title, lang, pageKey) => `<!doctype html>
     pre.textContent = el.textContent;
     el.parentElement.replaceWith(pre);
   });
-  mermaid.initialize({ startOnLoad: true, theme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default' });
+  mermaid.initialize({ startOnLoad: true, theme: 'dark' });
   hljs.highlightAll();
 </script>
 </head>
 <body>`;
 
 function buildStyleCss() {
+  // Dark is the only theme, on purpose - no light variant, no prefers-color-scheme branching.
+  // The site previously followed the visitor's OS preference, but the light palette read worse
+  // and there's no in-page toggle to opt back into it, so a conditional default would still
+  // show light to plenty of visitors. Committing to one look avoids that.
   return `:root {
-  --bg: #ffffff; --fg: #16161f; --muted: #6b7280; --accent: #4f46e5; --accent-2: #06b6d4;
-  --card-bg: #f8fafc; --card-border: #e2e8f0; --card-hover: #eef2ff; --code-bg: #f1f5f9;
-  --hero-bg: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,70,229,0.12), transparent);
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0b0c10; --fg: #e8e9ee; --muted: #9aa0ac; --accent: #818cf8; --accent-2: #22d3ee;
-    --card-bg: #16171f; --card-border: #262834; --card-hover: #1d2030; --code-bg: #12131a;
-    --hero-bg: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(129,140,248,0.15), transparent);
-  }
+  --bg: #0b0c10; --fg: #e8e9ee; --muted: #9aa0ac; --accent: #818cf8; --accent-2: #22d3ee;
+  --card-bg: #16171f; --card-border: #262834; --card-hover: #1d2030; --code-bg: #12131a;
+  --hero-bg: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(129,140,248,0.15), transparent);
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.65; -webkit-font-smoothing: antialiased; }
