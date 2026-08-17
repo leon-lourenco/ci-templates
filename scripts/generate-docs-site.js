@@ -22,20 +22,78 @@ const repoSlug = process.env.GITHUB_REPOSITORY || 'unknown/unknown';
 const repoName = repoSlug.split('/')[1] || repoSlug;
 const repoUrl = `https://github.com/${repoSlug}`;
 
-const SITE_NAME = 'The Data Structures Atlas';
 const AUTHOR_NAME = 'Leon Lourenço';
 const AUTHOR_GITHUB = 'https://github.com/leon-lourenco';
 const AUTHOR_LINKEDIN = 'https://www.linkedin.com/in/leonardo-lourenço-gomes';
 
-const CATEGORY_ORDER = ['linear', 'trees', 'hashing', 'graphs'];
-const LANGS = ['en', 'pt-BR', 'es'];
+// Everything that's specific to *which* concept-catalog repo this is (site name, category
+// folder names, hero copy, per-category translated labels) lives here, keyed by repo name -
+// so a new sibling repo (design-patterns-project, and whatever comes after it) is a new entry,
+// not a fork of this script. Unknown repos fall back to the data-structures-project entry
+// (this script's original hardcoded behavior) rather than crashing.
+const REPO_CONFIGS = {
+  'data-structures-project': {
+    siteName: 'The Data Structures Atlas',
+    categoryOrder: ['linear', 'trees', 'hashing', 'graphs'],
+    langs: ['en', 'pt-BR', 'es'],
+    perLang: {
+      en: {
+        tagline: 'A field guide to classic data structures — click one to see how it actually works, not just what it\'s called.',
+        subtitle: (n) => `${n} structures, each documented from its own real Gradle module — no content lives only on this page.`,
+        allItems: '← All structures',
+        categories: { linear: 'Linear', trees: 'Trees', hashing: 'Hashing', graphs: 'Graphs' },
+      },
+      'pt-BR': {
+        tagline: 'Um guia de campo para estruturas de dados clássicas — clique numa pra ver como ela funciona de verdade, não só como se chama.',
+        subtitle: (n) => `${n} estruturas, cada uma documentada a partir do seu próprio módulo Gradle real — nenhum conteúdo vive só nesta página.`,
+        allItems: '← Todas as estruturas',
+        categories: { linear: 'Linear', trees: 'Árvores', hashing: 'Hashing', graphs: 'Grafos' },
+      },
+      es: {
+        tagline: 'Una guía de campo para estructuras de datos clásicas — haz clic en una para ver cómo funciona realmente, no solo cómo se llama.',
+        subtitle: (n) => `${n} estructuras, cada una documentada desde su propio módulo Gradle real — ningún contenido vive solo en esta página.`,
+        allItems: '← Todas las estructuras',
+        categories: { linear: 'Linear', trees: 'Árboles', hashing: 'Hashing', graphs: 'Grafos' },
+      },
+    },
+  },
+  'design-patterns-project': {
+    siteName: 'The Design Patterns Field Guide',
+    categoryOrder: ['creational', 'structural', 'behavioral'],
+    langs: ['en', 'pt-BR', 'es'],
+    perLang: {
+      en: {
+        tagline: 'A field guide to the Gang of Four design patterns — click one to see the real problem it solves, not just its class diagram.',
+        subtitle: (n) => `${n} patterns, each documented from its own real Gradle module — no content lives only on this page.`,
+        allItems: '← All patterns',
+        categories: { creational: 'Creational', structural: 'Structural', behavioral: 'Behavioral' },
+      },
+      'pt-BR': {
+        tagline: 'Um guia de campo para os padrões de projeto do Gang of Four — clique num pra ver o problema real que ele resolve, não só o diagrama de classes.',
+        subtitle: (n) => `${n} padrões, cada um documentado a partir do seu próprio módulo Gradle real — nenhum conteúdo vive só nesta página.`,
+        allItems: '← Todos os padrões',
+        categories: { creational: 'Creational', structural: 'Structural', behavioral: 'Behavioral' },
+      },
+      es: {
+        tagline: 'Una guía de campo para los patrones de diseño del Gang of Four — haz clic en uno para ver el problema real que resuelve, no solo su diagrama de clases.',
+        subtitle: (n) => `${n} patrones, cada uno documentado desde su propio módulo Gradle real — ningún contenido vive solo en esta página.`,
+        allItems: '← Todos los patrones',
+        categories: { creational: 'Creational', structural: 'Structural', behavioral: 'Behavioral' },
+      },
+    },
+  },
+};
+
+const repoConfig = REPO_CONFIGS[repoName] || REPO_CONFIGS['data-structures-project'];
+const SITE_NAME = repoConfig.siteName;
+const CATEGORY_ORDER = repoConfig.categoryOrder;
+const LANGS = repoConfig.langs;
 const LANG_LABELS = { en: 'English', 'pt-BR': 'Português', es: 'Español' };
 
+// Strings that don't vary by which concept-catalog repo this is - only by language. Anything
+// repo-specific (site name, tagline, per-category labels) comes from repoConfig.perLang instead.
 const STRINGS = {
   en: {
-    tagline: 'A field guide to classic data structures — click one to see how it actually works, not just what it\'s called.',
-    subtitle: (n) => `${n} structures, each documented from its own real Gradle module — no content lives only on this page.`,
-    allStructures: '← All structures',
     unitTests: 'Unit tests',
     viewCoverage: 'View full JaCoCo coverage report →',
     noTestSource: 'No test source found.',
@@ -47,12 +105,8 @@ const STRINGS = {
     builtBy: 'Built by',
     readIn: 'Read this in:',
     untranslated: 'This page hasn\'t been translated yet — showing the English version.',
-    categories: { linear: 'Linear', trees: 'Trees', hashing: 'Hashing', graphs: 'Graphs' },
   },
   'pt-BR': {
-    tagline: 'Um guia de campo para estruturas de dados clássicas — clique numa pra ver como ela funciona de verdade, não só como se chama.',
-    subtitle: (n) => `${n} estruturas, cada uma documentada a partir do seu próprio módulo Gradle real — nenhum conteúdo vive só nesta página.`,
-    allStructures: '← Todas as estruturas',
     unitTests: 'Testes unitários',
     viewCoverage: 'Ver relatório completo de cobertura JaCoCo →',
     noTestSource: 'Nenhum código de teste encontrado.',
@@ -64,12 +118,8 @@ const STRINGS = {
     builtBy: 'Construído por',
     readIn: 'Leia em:',
     untranslated: 'Esta página ainda não foi traduzida — mostrando a versão em inglês.',
-    categories: { linear: 'Linear', trees: 'Árvores', hashing: 'Hashing', graphs: 'Grafos' },
   },
   es: {
-    tagline: 'Una guía de campo para estructuras de datos clásicas — haz clic en una para ver cómo funciona realmente, no solo cómo se llama.',
-    subtitle: (n) => `${n} estructuras, cada una documentada desde su propio módulo Gradle real — ningún contenido vive solo en esta página.`,
-    allStructures: '← Todas las estructuras',
     unitTests: 'Pruebas unitarias',
     viewCoverage: 'Ver informe completo de cobertura JaCoCo →',
     noTestSource: 'No se encontró código de prueba.',
@@ -81,7 +131,6 @@ const STRINGS = {
     builtBy: 'Construido por',
     readIn: 'Leer en:',
     untranslated: 'Esta página aún no ha sido traducida — mostrando la versión en inglés.',
-    categories: { linear: 'Linear', trees: 'Árboles', hashing: 'Hashing', graphs: 'Grafos' },
   },
 };
 
@@ -259,6 +308,7 @@ function readmeCandidates(moduleDir, lang) {
 
 function buildModulePage(lang, category, moduleName, moduleDir, title) {
   const t = STRINGS[lang];
+  const c = repoConfig.perLang[lang];
   const pageKey = `${category}/${moduleName}`;
   const { text: readme, fallback } = readmeCandidates(moduleDir, lang);
   const bodyHtml = marked.parse(readme.replace(/^#[^\n]*\n/, '')); // strip the leading H1, header already shows the title
@@ -278,9 +328,9 @@ function buildModulePage(lang, category, moduleName, moduleDir, title) {
 
   return `${PAGE_HEAD(`${title} — ${SITE_NAME}`, lang, pageKey)}
 <header class="module">
-<a class="back" href="${hrefTo(lang, pageKey, lang, 'index')}">${t.allStructures}</a>
+<a class="back" href="${hrefTo(lang, pageKey, lang, 'index')}">${c.allItems}</a>
 <h1><span class="icon-badge">${icon}</span>${escapeHtml(title)}</h1>
-<p class="meta">${t.categories[category]} · <a href="${repoUrl}/tree/master/${category}/${moduleName}">${t.viewSource}</a></p>
+<p class="meta">${c.categories[category]} · <a href="${repoUrl}/tree/master/${category}/${moduleName}">${t.viewSource}</a></p>
 ${langSwitcher(lang, pageKey, t)}
 ${fallback ? `<span class="untranslated-notice">${t.untranslated}</span>` : ''}
 </header>
@@ -299,12 +349,13 @@ ${testSections || `<p>${t.noTestSource}</p>`}
 
 function buildIndexPage(lang, modulesByCategory, total) {
   const t = STRINGS[lang];
+  const cfg = repoConfig.perLang[lang];
   const sections = CATEGORY_ORDER.filter(c => modulesByCategory[c] && modulesByCategory[c].length).map((category) => {
     const cards = modulesByCategory[category].map(({ name, title }) => {
       const icon = readIfExists(path.join(iconsDir, `${name}.svg`)) || '';
       return `<a class="card" href="${category}/${name}/index.html"><span class="icon-badge">${icon}</span><span>${escapeHtml(title)}</span></a>`;
     }).join('\n');
-    return `<section class="gallery-section"><h2>${t.categories[category]}</h2><div class="grid">${cards}</div></section>`;
+    return `<section class="gallery-section"><h2>${cfg.categories[category]}</h2><div class="grid">${cards}</div></section>`;
   }).join('\n');
 
   return `${PAGE_HEAD(SITE_NAME, lang, 'index')}
@@ -313,8 +364,8 @@ function buildIndexPage(lang, modulesByCategory, total) {
 <a href="${repoUrl}/actions/workflows/ci.yml"><img src="${repoUrl}/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
 </div>
 <h1 class="brand"><span class="accent">${SITE_NAME}</span></h1>
-<p class="tagline">${t.tagline}</p>
-<p class="subtitle">${t.subtitle(total)}</p>
+<p class="tagline">${cfg.tagline}</p>
+<p class="subtitle">${cfg.subtitle(total)}</p>
 <p class="byline">${t.builtBy} <a href="${AUTHOR_GITHUB}">${AUTHOR_NAME}</a> · <a href="${AUTHOR_GITHUB}">GitHub</a> · <a href="${AUTHOR_LINKEDIN}">LinkedIn</a> · <a href="${repoUrl}">${t.viewSourceRepo}</a></p>
 ${langSwitcher(lang, 'index', t)}
 </header>
