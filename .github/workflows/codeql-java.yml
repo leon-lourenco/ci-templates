@@ -1,0 +1,51 @@
+name: CodeQL analysis (Java, reusable)
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: 'JDK version to build with for analysis'
+        required: false
+        type: string
+        default: '21'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          build-mode: manual
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      # Manual build mode: compile only, no need to run the test suite for static analysis.
+      - name: Compile every module
+        run: ./gradlew compileJava compileTestJava --console=plain
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:java-kotlin'

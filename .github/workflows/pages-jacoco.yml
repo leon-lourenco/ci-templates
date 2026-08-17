@@ -1,0 +1,76 @@
+name: Publish JaCoCo coverage to GitHub Pages (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: 'JDK version to build with'
+        required: false
+        type: string
+        default: '21'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Build and test (generates every module's coverage report)
+        run: ./gradlew build --console=plain
+
+      # Collects every module's JaCoCo HTML report into one static site, one subfolder per
+      # module, plus an index page linking to each - no per-repo scripting needed to reuse this.
+      - name: Assemble the coverage site
+        shell: bash
+        run: |
+          set -e
+          mkdir -p _site
+          {
+            echo "<!doctype html><html><head><meta charset=\"utf-8\"><title>Coverage reports</title></head><body>"
+            echo "<h1>Test coverage reports</h1><ul>"
+          } > _site/index.html
+          while IFS= read -r report; do
+            module=$(echo "$report" | sed -E 's#^\./(.+)/build/reports/jacoco/test/html$#\1#')
+            dest="_site/$module"
+            mkdir -p "$dest"
+            cp -r "$report"/. "$dest"/
+            echo "<li><a href=\"$module/index.html\">$module</a></li>" >> _site/index.html
+          done < <(find . -type d -path "*/build/reports/jacoco/test/html" -not -path "./_site/*")
+          echo "</ul></body></html>" >> _site/index.html
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

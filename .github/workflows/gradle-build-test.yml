@@ -1,0 +1,53 @@
+name: Gradle build, test, and coverage (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: 'JDK version to build and test with'
+        required: false
+        type: string
+        default: '21'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+
+      # Handles both the dependency cache and Gradle's own build cache.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      # Compiles every module, runs every test, generates every module's coverage report -
+      # whatever `build` already wires up in the calling repo's own build.gradle.kts.
+      - name: Build and test
+        run: ./gradlew build --console=plain
+
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: '**/build/reports/jacoco/test/html'
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: '**/build/reports/tests/test'
+          retention-days: 14
+          if-no-files-found: ignore
