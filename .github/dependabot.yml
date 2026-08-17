@@ -1,0 +1,8 @@
+version: 2
+updates:
+  # Keeps checkout/setup-java/setup-gradle/codeql-action/deploy-pages etc. current across all
+  # three reusable workflows in this repo.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
