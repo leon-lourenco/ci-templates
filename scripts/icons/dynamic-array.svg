@@ -1,0 +1,6 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="6" y="24" width="12" height="16"/>
+  <rect x="18" y="24" width="12" height="16"/>
+  <rect x="30" y="24" width="12" height="16"/>
+  <rect x="42" y="24" width="12" height="16" stroke-dasharray="3 3"/>
+</svg>
