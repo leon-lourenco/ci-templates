@@ -36,19 +36,19 @@ permissions:
 
 jobs:
   build-test:
-    uses: leon-lourenco/ci-templates/.github/workflows/gradle-build-test.yml@main
+    uses: leon-lourenco/ci-templates/.github/workflows/gradle-build-test.yml@master
     with:
       java-version: '26'
 
   codeql:
-    uses: leon-lourenco/ci-templates/.github/workflows/codeql-java.yml@main
+    uses: leon-lourenco/ci-templates/.github/workflows/codeql-java.yml@master
     with:
       java-version: '26'
 
   pages:
     needs: build-test
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    uses: leon-lourenco/ci-templates/.github/workflows/pages-jacoco.yml@main
+    uses: leon-lourenco/ci-templates/.github/workflows/pages-jacoco.yml@master
     with:
       java-version: '26'
 ```
