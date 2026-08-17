@@ -57,6 +57,35 @@ const REPO_CONFIGS = {
       },
     },
   },
+  'algorithms-project': {
+    siteName: 'The Algorithm Almanac',
+    categoryOrder: ['sorting', 'searching', 'dynamic-programming', 'greedy', 'string-matching', 'backtracking', 'math'],
+    langs: ['en', 'pt-BR', 'es'],
+    siblingProject: {
+      name: 'The Grand Data Structures Project',
+      url: 'https://leon-lourenco.github.io/data-structures-project/',
+    },
+    perLang: {
+      en: {
+        tagline: 'A field guide to classic algorithms — click one to see how it actually behaves, not just its Big-O.',
+        subtitle: (n) => `${n} algorithms, each documented from its own real Gradle module — no content lives only on this page.`,
+        allItems: '← All algorithms',
+        categories: { sorting: 'Sorting', searching: 'Searching', 'dynamic-programming': 'Dynamic Programming', greedy: 'Greedy', 'string-matching': 'String Matching', backtracking: 'Backtracking', math: 'Math' },
+      },
+      'pt-BR': {
+        tagline: 'Um guia de campo para algoritmos clássicos — clique num pra ver como ele se comporta de verdade, não só o Big-O dele.',
+        subtitle: (n) => `${n} algoritmos, cada um documentado a partir do seu próprio módulo Gradle real — nenhum conteúdo vive só nesta página.`,
+        allItems: '← Todos os algoritmos',
+        categories: { sorting: 'Ordenação', searching: 'Busca', 'dynamic-programming': 'Programação Dinâmica', greedy: 'Guloso', 'string-matching': 'Casamento de Padrões', backtracking: 'Backtracking', math: 'Matemática' },
+      },
+      es: {
+        tagline: 'Una guía de campo para algoritmos clásicos — haz clic en uno para ver cómo se comporta realmente, no solo su Big-O.',
+        subtitle: (n) => `${n} algoritmos, cada uno documentado desde su propio módulo Gradle real — ningún contenido vive solo en esta página.`,
+        allItems: '← Todos los algoritmos',
+        categories: { sorting: 'Ordenamiento', searching: 'Búsqueda', 'dynamic-programming': 'Programación Dinámica', greedy: 'Voraz', 'string-matching': 'Coincidencia de Patrones', backtracking: 'Backtracking', math: 'Matemáticas' },
+      },
+    },
+  },
   'design-patterns-project': {
     siteName: 'The Design Patterns Field Guide',
     categoryOrder: ['creational', 'structural', 'behavioral'],
@@ -105,6 +134,7 @@ const STRINGS = {
     builtBy: 'Built by',
     readIn: 'Read this in:',
     untranslated: 'This page hasn\'t been translated yet — showing the English version.',
+    alsoSee: 'Also check out:',
   },
   'pt-BR': {
     unitTests: 'Testes unitários',
@@ -118,6 +148,7 @@ const STRINGS = {
     builtBy: 'Construído por',
     readIn: 'Leia em:',
     untranslated: 'Esta página ainda não foi traduzida — mostrando a versão em inglês.',
+    alsoSee: 'Confira também:',
   },
   es: {
     unitTests: 'Pruebas unitarias',
@@ -131,8 +162,18 @@ const STRINGS = {
     builtBy: 'Construido por',
     readIn: 'Leer en:',
     untranslated: 'Esta página aún no ha sido traducida — mostrando la versión en inglés.',
+    alsoSee: 'También puedes ver:',
   },
 };
+
+// Renders a footer link to a sibling concept-catalog repo's own docs site, when the current
+// repo's config declares one - a no-op (empty string) for repos that don't, so this stays
+// backward-compatible with every existing REPO_CONFIGS entry unless they opt in.
+function siblingLinkHtml(lang) {
+  const sibling = repoConfig.siblingProject;
+  if (!sibling) return '';
+  return `<p class="sibling-link">${STRINGS[lang].alsoSee} <a href="${sibling.url}">${sibling.name}</a></p>`;
+}
 
 function titleCase(slug) {
   return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -343,6 +384,7 @@ ${testSections || `<p>${t.noTestSource}</p>`}
 <footer>
 <p>${t.generatedBy} <a href="${repoUrl}/actions">GitHub Actions</a> ${t.neverHandEditedModule}</p>
 <p>${t.builtBy} <a href="${AUTHOR_GITHUB}">${AUTHOR_NAME}</a> · <a href="${AUTHOR_GITHUB}">GitHub</a> · <a href="${AUTHOR_LINKEDIN}">LinkedIn</a></p>
+${siblingLinkHtml(lang)}
 </footer>
 </body></html>`;
 }
@@ -375,6 +417,7 @@ ${sections}
 <footer>
 <p>${t.generatedBy} <a href="${repoUrl}/actions">GitHub Actions</a> ${t.neverHandEditedIndex}</p>
 <p>${t.builtBy} <a href="${AUTHOR_GITHUB}">${AUTHOR_NAME}</a> · <a href="${AUTHOR_GITHUB}">GitHub</a> · <a href="${AUTHOR_LINKEDIN}">LinkedIn</a></p>
+${siblingLinkHtml(lang)}
 </footer>
 </body></html>`;
 }
