@@ -8,6 +8,11 @@ on:
         required: false
         type: string
         default: '21'
+      build-tool:
+        description: "'gradle' or 'maven' - picks how the project gets compiled for analysis"
+        required: false
+        type: string
+        default: 'gradle'
 
 permissions:
   contents: read
@@ -28,21 +33,27 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ inputs.java-version }}
+          cache: ${{ inputs.build-tool }}
 
       - name: Set up Gradle
+        if: inputs.build-tool == 'gradle'
         uses: gradle/actions/setup-gradle@v4
 
+      # Gradle gets a manual, explicit compile step (see below) since CodeQL's autobuilder
+      # doesn't reliably pick up every Gradle project's conventions. Maven's autobuilder handles
+      # a plain pom.xml (or several independent ones, as in a multi-service repo) without help.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
-          build-mode: manual
+          build-mode: ${{ inputs.build-tool == 'gradle' && 'manual' || 'autobuild' }}
 
       - name: Make gradlew executable
+        if: inputs.build-tool == 'gradle'
         run: chmod +x gradlew
 
-      # Manual build mode: compile only, no need to run the test suite for static analysis.
-      - name: Compile every module
+      - name: Compile every module (Gradle)
+        if: inputs.build-tool == 'gradle'
         run: ./gradlew compileJava compileTestJava --console=plain
 
       - name: Perform CodeQL analysis

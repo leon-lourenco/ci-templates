@@ -1,0 +1,46 @@
+name: Deploy a static docs folder to GitHub Pages (reusable)
+
+# For a repo whose GitHub Page is a plain, pre-built static site (no per-language docs
+# generator, no coverage gallery) - just checks out the repo and publishes one folder from it.
+# Repos that need to *generate* the site first (like the JaCoCo coverage gallery) have their own
+# dedicated workflow instead, e.g. pages-jacoco.yml.
+
+on:
+  workflow_call:
+    inputs:
+      docs-path:
+        description: 'Directory containing the pre-built static site to publish'
+        required: false
+        type: string
+        default: 'docs'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ inputs.docs-path }}
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

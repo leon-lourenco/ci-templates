@@ -4,13 +4,15 @@ Reusable GitHub Actions workflows shared across [Leon Lourenço](https://github.
 portfolio repos — one place to fix a CI/CD bug or add a capability instead of copy-pasting
 YAML across every repo and letting them drift.
 
-Three workflows, each callable independently via `workflow_call`:
+Five workflows, each callable independently via `workflow_call`:
 
 | Workflow | What it does |
 |---|---|
 | [`gradle-build-test.yml`](.github/workflows/gradle-build-test.yml) | `./gradlew build` on a JDK you choose — compiles every module, runs every test, uploads coverage reports as a build artifact. |
-| [`codeql-java.yml`](.github/workflows/codeql-java.yml) | Static analysis (CodeQL) over Java/Kotlin source, results land in the calling repo's Security tab. |
-| [`pages-jacoco.yml`](.github/workflows/pages-jacoco.yml) | Builds the project, collects every module's JaCoCo HTML report into one static site (one subfolder per module, with an index), and deploys it to GitHub Pages. |
+| [`maven-build-test.yml`](.github/workflows/maven-build-test.yml) | `./mvnw test` on a JDK you choose, in a `working-directory` you point it at — call it once per `pom.xml` for a repo with several independent Maven projects instead of one aggregator build. |
+| [`codeql-java.yml`](.github/workflows/codeql-java.yml) | Static analysis (CodeQL) over Java/Kotlin source, results land in the calling repo's Security tab. Takes a `build-tool` input (`gradle`, the default, or `maven`) — Gradle gets an explicit manual compile step, Maven uses CodeQL's own autobuilder. |
+| [`pages-jacoco.yml`](.github/workflows/pages-jacoco.yml) | Builds the project, collects every module's JaCoCo HTML report into one static site (one subfolder per module, with an index), and deploys it to GitHub Pages. For the classic/applied/benchmark README convention (data-structures-project, design-patterns-project) only. |
+| [`pages-static.yml`](.github/workflows/pages-static.yml) | Publishes a `docs-path` you already committed straight to GitHub Pages, no generation step. For a repo whose Page is a hand-built static site instead of a generated coverage gallery. |
 
 ## Using these from another repo
 
@@ -51,6 +53,34 @@ jobs:
     uses: leon-lourenco/ci-templates/.github/workflows/pages-jacoco.yml@master
     with:
       java-version: '26'
+```
+
+A repo with several independent Maven projects (no root aggregator `pom.xml`) and a hand-built
+Page instead calls the Maven/static-Pages pair, once per project directory:
+
+```yaml
+jobs:
+  build-test-service-a:
+    uses: leon-lourenco/ci-templates/.github/workflows/maven-build-test.yml@master
+    with:
+      working-directory: service-a
+
+  build-test-service-b:
+    uses: leon-lourenco/ci-templates/.github/workflows/maven-build-test.yml@master
+    with:
+      working-directory: service-b
+
+  codeql:
+    uses: leon-lourenco/ci-templates/.github/workflows/codeql-java.yml@master
+    with:
+      build-tool: maven
+
+  pages:
+    needs: [build-test-service-a, build-test-service-b]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    uses: leon-lourenco/ci-templates/.github/workflows/pages-static.yml@master
+    with:
+      docs-path: docs
 ```
 
 Each calling repo still needs its own `.github/dependabot.yml` — Dependabot configuration isn't

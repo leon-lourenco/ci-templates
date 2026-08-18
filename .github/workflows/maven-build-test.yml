@@ -1,0 +1,48 @@
+name: Maven build and test (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: 'JDK version to build and test with'
+        required: false
+        type: string
+        default: '21'
+      working-directory:
+        description: 'Directory containing the pom.xml to build (a repo with several independent Maven projects calls this once per directory)'
+        required: false
+        type: string
+        default: '.'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java-version }}
+          cache: maven
+
+      - name: Make mvnw executable
+        working-directory: ${{ inputs.working-directory }}
+        run: chmod +x mvnw
+
+      # Testcontainers-based integration tests need a Docker daemon, which ubuntu-latest
+      # runners already have - no extra setup step required.
+      - name: Build and test
+        working-directory: ${{ inputs.working-directory }}
+        run: ./mvnw --batch-mode test
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports-${{ inputs.working-directory }}
+          path: ${{ inputs.working-directory }}/target/surefire-reports
+          retention-days: 14
+          if-no-files-found: ignore
