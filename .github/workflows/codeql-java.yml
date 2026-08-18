@@ -39,14 +39,15 @@ jobs:
         if: inputs.build-tool == 'gradle'
         uses: gradle/actions/setup-gradle@v4
 
-      # Gradle gets a manual, explicit compile step (see below) since CodeQL's autobuilder
-      # doesn't reliably pick up every Gradle project's conventions. Maven's autobuilder handles
-      # a plain pom.xml (or several independent ones, as in a multi-service repo) without help.
+      # Both build tools get a manual, explicit compile step. CodeQL's own autobuilder doesn't
+      # reliably pick up every Gradle project's conventions, and - confirmed the hard way on a
+      # repo with two independent pom.xml files and no parent aggregator - it only looks for a
+      # single Maven project at the repo root and fails outright on that shape.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: java-kotlin
-          build-mode: ${{ inputs.build-tool == 'gradle' && 'manual' || 'autobuild' }}
+          build-mode: manual
 
       - name: Make gradlew executable
         if: inputs.build-tool == 'gradle'
@@ -55,6 +56,24 @@ jobs:
       - name: Compile every module (Gradle)
         if: inputs.build-tool == 'gradle'
         run: ./gradlew compileJava compileTestJava --console=plain
+
+      # Finds every pom.xml in the repo (root aggregator or several independent projects alike)
+      # and compiles each with its own wrapper if it has one, falling back to a system `mvn`.
+      - name: Compile every project (Maven)
+        if: inputs.build-tool == 'maven'
+        shell: bash
+        run: |
+          set -e
+          find . -maxdepth 3 -name pom.xml -not -path '*/target/*' | while read -r pom; do
+            dir=$(dirname "$pom")
+            echo "::group::Building $dir"
+            if [ -x "$dir/mvnw" ]; then
+              (cd "$dir" && ./mvnw --batch-mode compile test-compile)
+            else
+              (cd "$dir" && mvn --batch-mode compile test-compile)
+            fi
+            echo "::endgroup::"
+          done
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
