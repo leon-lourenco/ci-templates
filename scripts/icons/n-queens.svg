@@ -1,0 +1,8 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="8" y="8" width="48" height="48" stroke-width="2"/>
+  <path d="M8 24 L56 24 M8 40 L56 40 M24 8 L24 56 M40 8 L40 56" stroke-width="1.5"/>
+  <circle cx="16" cy="16" r="4" fill="currentColor"/>
+  <path d="M16 20 L16 52" stroke-dasharray="2 3"/>
+  <path d="M20 16 L52 16" stroke-dasharray="2 3"/>
+  <path d="M20 20 L52 52" stroke-dasharray="2 3"/>
+</svg>
