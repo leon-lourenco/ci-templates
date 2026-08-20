@@ -26,7 +26,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK
         uses: actions/setup-java@v5
@@ -44,7 +44,7 @@ jobs:
         run: ./gradlew build --console=plain
 
       - name: Check out ci-templates (for the site generator script)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: leon-lourenco/ci-templates
           ref: master
