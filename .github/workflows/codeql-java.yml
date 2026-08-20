@@ -37,7 +37,7 @@ jobs:
 
       - name: Set up Gradle
         if: inputs.build-tool == 'gradle'
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       # Both build tools get a manual, explicit compile step. CodeQL's own autobuilder doesn't
       # reliably pick up every Gradle project's conventions, and - confirmed the hard way on a
