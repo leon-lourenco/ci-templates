@@ -57,23 +57,41 @@ jobs:
         if: inputs.build-tool == 'gradle'
         run: ./gradlew compileJava compileTestJava --console=plain
 
-      # Finds every pom.xml in the repo (root aggregator or several independent projects alike)
-      # and compiles each with its own wrapper if it has one, falling back to a system `mvn`.
+      # A repo with a root pom.xml is one multi-module reactor - building it once from the root
+      # lets Maven resolve inter-module dependencies (e.g. an api module depending on a sibling
+      # domain module) via the reactor itself. Building each module's pom.xml independently, as
+      # the fallback below does, only works when there's no such coupling - confirmed the hard
+      # way on a reactor project where every non-root module failed with "could not find
+      # artifact", since its sibling dependencies were never installed to the local repo.
+      #
+      # A repo with no root pom.xml (several independent Maven projects side by side, each with
+      # no parent aggregator) falls back to compiling every pom.xml found, since there's no
+      # single reactor root to build from.
       - name: Compile every project (Maven)
         if: inputs.build-tool == 'maven'
         shell: bash
         run: |
           set -e
-          find . -maxdepth 3 -name pom.xml -not -path '*/target/*' | while read -r pom; do
-            dir=$(dirname "$pom")
-            echo "::group::Building $dir"
-            if [ -x "$dir/mvnw" ]; then
-              (cd "$dir" && ./mvnw --batch-mode compile test-compile)
+          if [ -f pom.xml ]; then
+            echo "::group::Building . (reactor root)"
+            if [ -x "./mvnw" ]; then
+              ./mvnw --batch-mode compile test-compile
             else
-              (cd "$dir" && mvn --batch-mode compile test-compile)
+              mvn --batch-mode compile test-compile
             fi
             echo "::endgroup::"
-          done
+          else
+            find . -maxdepth 3 -name pom.xml -not -path '*/target/*' | while read -r pom; do
+              dir=$(dirname "$pom")
+              echo "::group::Building $dir"
+              if [ -x "$dir/mvnw" ]; then
+                (cd "$dir" && ./mvnw --batch-mode compile test-compile)
+              else
+                (cd "$dir" && mvn --batch-mode compile test-compile)
+              fi
+              echo "::endgroup::"
+            done
+          fi
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
