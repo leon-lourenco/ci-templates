@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: 'gradle'
+      submodules:
+        description: 'Check out git submodules too (needed when the build reads a submodule, e.g. a shared version catalog)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -27,6 +32,8 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
+        with:
+          submodules: ${{ inputs.submodules }}
 
       - name: Set up JDK
         uses: actions/setup-java@v5
